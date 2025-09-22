@@ -1,3 +1,5 @@
+use rust_wgpu_tutorial::run;
+
 fn main() {
-    println!("Hello, world!");
+    run().unwrap();
 }
