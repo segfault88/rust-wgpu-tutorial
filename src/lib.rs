@@ -19,6 +19,7 @@ pub struct State {
     is_surface_configured: bool,
     window: Arc<Window>,
     clear_color: wgpu::Color,
+    max_texture_dimension: u32,
 }
 
 impl State {
@@ -61,6 +62,9 @@ impl State {
             })
             .await?;
 
+        // Get the maximum texture dimension from the device limits
+        let max_texture_dimension = device.limits().max_texture_dimension_2d;
+
         let surface_caps = surface.get_capabilities(&adapter);
 
         // Shader code in this tutorial assumes an Srgb surface texture. Using a different
@@ -72,11 +76,16 @@ impl State {
             .copied()
             .find(|f| f.is_srgb())
             .unwrap_or(surface_caps.formats[0]);
+
+        // Clamp surface dimensions to maximum supported texture size
+        let clamped_width = size.width.min(max_texture_dimension);
+        let clamped_height = size.height.min(max_texture_dimension);
+
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
-            width: size.width,
-            height: size.height,
+            width: clamped_width,
+            height: clamped_height,
             present_mode: surface_caps.present_modes[0],
             alpha_mode: surface_caps.alpha_modes[0],
             desired_maximum_frame_latency: 2,
@@ -96,13 +105,18 @@ impl State {
                 b: 0.3,
                 a: 1.0,
             },
+            max_texture_dimension,
         })
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
         if width > 0 && height > 0 {
-            self.config.width = width;
-            self.config.height = height;
+            // Clamp dimensions to maximum supported texture size
+            let clamped_width = width.min(self.max_texture_dimension);
+            let clamped_height = height.min(self.max_texture_dimension);
+
+            self.config.width = clamped_width;
+            self.config.height = clamped_height;
             self.surface.configure(&self.device, &self.config);
             self.is_surface_configured = true;
         }
