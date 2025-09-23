@@ -18,6 +18,7 @@ pub struct State {
     config: wgpu::SurfaceConfiguration,
     is_surface_configured: bool,
     window: Arc<Window>,
+    clear_color: wgpu::Color,
 }
 
 impl State {
@@ -89,6 +90,12 @@ impl State {
             config,
             is_surface_configured: false,
             window,
+            clear_color: wgpu::Color {
+                r: 0.1,
+                g: 0.2,
+                b: 0.3,
+                a: 1.0,
+            },
         })
     }
 
@@ -129,12 +136,7 @@ impl State {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.1,
-                            g: 0.2,
-                            b: 0.3,
-                            a: 1.0,
-                        }),
+                        load: wgpu::LoadOp::Clear(self.clear_color),
                         store: wgpu::StoreOp::Store,
                     },
                     depth_slice: None,
@@ -156,6 +158,11 @@ impl State {
             (KeyCode::Escape, true) => event_loop.exit(),
             _ => {}
         }
+    }
+
+    fn handle_mouse_move(&mut self, x: f64, y: f64) {
+        self.clear_color.r = x / self.config.width as f64;
+        self.clear_color.g = y / self.config.height as f64;
     }
 }
 
@@ -278,6 +285,9 @@ impl ApplicationHandler<State> for App {
                     },
                 ..
             } => state.handle_key(event_loop, code, key_state.is_pressed()),
+            WindowEvent::CursorMoved { position, .. } => {
+                state.handle_mouse_move(position.x, position.y)
+            }
             _ => {}
         }
     }
