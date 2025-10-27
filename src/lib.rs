@@ -66,6 +66,7 @@ pub struct State {
     clear_color: wgpu::Color,
     max_texture_dimension: u32,
     vertex_buffer: wgpu::Buffer,
+    num_verticies: u32,
 }
 
 impl State {
@@ -156,14 +157,13 @@ impl State {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: Some("vs_main"),
-                buffers: &[],
+                buffers: &[Vertex::desc()],
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
                 entry_point: Some("fs_main"),
                 targets: &[Some(wgpu::ColorTargetState {
-                    // 4.
                     format: config.format,
                     blend: Some(wgpu::BlendState::REPLACE),
                     write_mask: wgpu::ColorWrites::ALL,
@@ -203,6 +203,7 @@ impl State {
             max_texture_dimension,
             render_pipeline,
             vertex_buffer,
+            num_verticies: VERTICES.len() as u32,
         })
     }
 
@@ -265,9 +266,9 @@ impl State {
                 timestamp_writes: None,
             });
 
-            // NEW!
-            render_pass.set_pipeline(&self.render_pipeline); // 2.
-            render_pass.draw(0..3, 0..1); // 3.
+            render_pass.set_pipeline(&self.render_pipeline);
+            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            render_pass.draw(0..self.num_verticies, 0..1);
         }
 
         self.queue.submit(iter::once(encoder.finish()));
