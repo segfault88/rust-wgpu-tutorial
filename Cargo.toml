@@ -19,6 +19,7 @@ wgpu = "26.0"
 pollster = "0.4"
 bytemuck = { version = "1.24.0", features = ["derive"] }
 image = "0.25.8"
+cgmath = "0.18.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.6"
