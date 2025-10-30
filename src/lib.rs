@@ -88,6 +88,7 @@ pub struct State {
     camera_uniform: camera::CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
+    camera_controller: camera::CameraController,
 }
 
 impl State {
@@ -307,6 +308,8 @@ impl State {
         });
         let num_indicies = INDICES.len() as u32;
 
+        let camera_controller = camera::CameraController::new(0.2);
+
         Ok(Self {
             surface,
             device,
@@ -332,6 +335,7 @@ impl State {
             camera_uniform,
             camera_buffer,
             camera_bind_group,
+            camera_controller,
         })
     }
 
@@ -348,7 +352,15 @@ impl State {
         }
     }
 
-    fn update(&mut self) {}
+    fn update(&mut self) {
+        self.camera_controller.update_camera(&mut self.camera);
+        self.camera_uniform.update_view_proj(&self.camera);
+        self.queue.write_buffer(
+            &self.camera_buffer,
+            0,
+            bytemuck::cast_slice(&[self.camera_uniform]),
+        );
+    }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         self.window.request_redraw();
@@ -409,9 +421,10 @@ impl State {
     }
 
     fn handle_key(&mut self, event_loop: &ActiveEventLoop, code: KeyCode, is_pressed: bool) {
-        match (code, is_pressed) {
-            (KeyCode::Escape, true) => event_loop.exit(),
-            _ => {}
+        if code == KeyCode::Escape && is_pressed {
+            event_loop.exit();
+        } else {
+            self.camera_controller.handle_key(code, is_pressed);
         }
     }
 
