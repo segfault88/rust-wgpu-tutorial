@@ -308,7 +308,7 @@ impl State {
         });
         let num_indicies = INDICES.len() as u32;
 
-        let camera_controller = camera::CameraController::new(0.2);
+        let camera_controller = camera::CameraController::new(0.005);
 
         Ok(Self {
             surface,
